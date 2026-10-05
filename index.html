@@ -671,6 +671,10 @@
   @media (prefers-reduced-motion: reduce){
     .placa-marc{ transition: opacity .2s ease; transform: none; }
   }
+  /* Cap requadre de focus en tocar el títol o la placa (sí amb el teclat) */
+  .orloj-placa:focus{ outline: none; }
+  h1:focus:not(:focus-visible), .banderolaTitol:focus:not(:focus-visible){ outline: none; }
+  h1, .banderolaTitol{ -webkit-tap-highlight-color: transparent; }
 </style>
 <link rel="manifest" href="orloj.webmanifest">
 <link rel="apple-touch-icon" href="orloj-icona-180.png">
@@ -2105,20 +2109,22 @@ window.ORLOJ_CONFIG = {"selectorTitol": ".banderolaTitol", "textDaurat": "clar",
     placaEl.classList.add('obert');
     placaEl.focus({preventScroll:true});
     clearTimeout(temporitzadorPlaca);
-    temporitzadorPlaca = setTimeout(tancaPlaca, 60000); // es tanca sola al cap d'un minut
+    temporitzadorPlaca = setTimeout(() => tancaPlaca(false), 60000); // es tanca sola al cap d'un minut
   }
-  function tancaPlaca(){
+  function tancaPlaca(perTeclat){
     if (!placaEl || placaEl.hidden) return;
     clearTimeout(temporitzadorPlaca);
     placaEl.classList.remove('obert');
     setTimeout(() => { if (!placaEl.classList.contains('obert')) placaEl.hidden = true; }, 400);
-    if (titolEl) titolEl.focus({preventScroll:true});
+    // Només es torna el focus al títol si s'ha tancat amb el teclat; amb el
+    // dit o el ratolí el navegador hi dibuixaria un requadre de focus.
+    if (perTeclat === true && titolEl) titolEl.focus({preventScroll:true});
   }
   if (placaEl){
     placaEl.tabIndex = -1;
-    placaEl.addEventListener('click', tancaPlaca);
+    placaEl.addEventListener('click', () => tancaPlaca(false));
   }
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') tancaPlaca(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') tancaPlaca(true); });
 
   if (titolEl){
     titolEl.setAttribute('role', 'button');
